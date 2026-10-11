@@ -25,3 +25,11 @@ resource "azurerm_resource_group" "rg" {
     owner = "bikram"
   }
 }
+
+resource "azurerm_resource_group" "dg" {
+  name     = "rishi5"
+  location = "east us"
+  tags = {
+    owner = "bikram1"
+  }
+}
