@@ -4,8 +4,26 @@ trigger:
 
 pool: mypool
 
+parameters:
+  - name: tfsec
+    displayName: tfsec chalana hai?
+    type: boolean
+    default: false
+
+  - name: tflint
+    displayName: tflint chalana hai?
+    type: boolean
+    default: false 
+
+  - name: infracost
+    displayName: infracost chalana hai?
+    type: boolean
+    default: false 
+
 stages:
   - stage: tfsec
+    dependsOn: []
+    condition: ${{ parameters.tfsec }}
     displayName: tfsec
     jobs:
       - job: tfsec
@@ -17,6 +35,8 @@ stages:
               script: 'tfsec .'
 
   - stage: tflint
+    dependsOn: []
+    condition: ${{ parameters.tflint }}
     displayName: tflint
     jobs:
       - job: tflint
@@ -28,6 +48,8 @@ stages:
               script: 'tflint --recursive --force'
 
   - stage: infracost
+    dependsOn: []
+    condition: ${{ parameters.tflint }}
     displayName: infracost
     jobs:
       - job: infracost
@@ -45,6 +67,10 @@ stages:
 
               
   - stage: validate
+    dependsOn:
+    - tfsec
+    - tflint
+    - infracost
     displayName: validate
     jobs:
       - job: validate
@@ -67,6 +93,8 @@ stages:
               workingDirectory: '$(System.DefaultWorkingDirectory)/environment/dev'
 
   - stage: plan
+    dependsOn:
+    - validate
     displayName: Plan
     jobs:
       - job: Plan
@@ -90,6 +118,8 @@ stages:
               environmentServiceNameAzureRM: 'newservice'
          
   - stage: Apply
+    dependsOn: 
+    - plan
     displayName: Apply
     jobs:
       - job: Approval
