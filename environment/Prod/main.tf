@@ -33,3 +33,11 @@ resource "azurerm_resource_group" "dg" {
     owner = "bikrama1"
   }
 }
+
+resource "azurerm_resource_group" "rahul" {
+  name     = "rahulsingh"
+  location = "east us"
+  tags = {
+    owner = "bikram"
+  }
+}
