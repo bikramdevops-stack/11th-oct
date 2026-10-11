@@ -86,7 +86,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'plan'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/environement/dev'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/dev'
               environmentServiceNameAzureRM: 'newservice'
          
   - stage: Apply
