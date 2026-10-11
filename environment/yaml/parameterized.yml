@@ -1,0 +1,160 @@
+trigger:
+ - main
+ - feature/*
+
+pool: mypool
+
+parameters:
+  - name: tfsec
+    displayName: tfsec chalana hai?
+    type: boolean
+    default: false
+
+  - name: tflint
+    displayName: tflint chalana hai?
+    type: boolean
+    default: false 
+
+  - name: infracost
+    displayName: infracost chalana hai?
+    type: boolean
+    default: false 
+
+  - name: environment
+    displayName: konsa environment?
+    type: string
+    values:
+    - dev
+    - prod
+
+stages:
+  - stage: tfsec
+    dependsOn: []
+    condition: ${{ parameters.tfsec }}
+    displayName: tfsec
+    jobs:
+      - job: tfsec
+        displayName: tfsec
+        steps:
+          - task: PowerShell@2
+            inputs:
+              targetType: 'inline'
+              script: 'tfsec .'
+
+  - stage: tflint
+    dependsOn: []
+    condition: ${{ parameters.tflint }}
+    displayName: tflint
+    jobs:
+      - job: tflint
+        displayName: tflint
+        steps:
+          - task: PowerShell@2
+            inputs:
+              targetType: 'inline'
+              script: 'tflint --recursive --force'
+
+  - stage: infracost
+    dependsOn: []
+    condition: ${{ parameters.tflint }}
+    displayName: infracost
+    jobs:
+      - job: infracost
+        displayName: infracost
+        steps:
+          - task: InfracostSetup@2
+            inputs:
+              apiKey: 'ico-sqro8FlLxZss9ygbGP6Egl2USz9q8Y6Q'
+              version: '0.10.x'
+
+          - task: PowerShell@2
+            inputs:
+              targetType: 'inline'
+              script: 'infracost breakdown --path .'
+
+              
+  - stage: validate
+    dependsOn:
+    - tfsec
+    - tflint
+    - infracost
+    displayName: validate
+    jobs:
+      - job: validate
+        displayName: Validate
+        steps:
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}'
+              backendServiceArm: 'newservice'
+              backendAzureRmStorageAccountName: 'pipelinetfstate'
+              backendAzureRmContainerName: 'xyzcontainer'
+              backendAzureRmKey: '${{ parameters.environment }}.tfstate'
+
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'validate'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}'
+
+  - stage: plan
+    dependsOn:
+    - validate
+    displayName: Plan
+    jobs:
+      - job: Plan
+        displayName: plan
+        steps:
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}'
+              backendServiceArm: 'newservice'
+              backendAzureRmStorageAccountName: 'pipelinetfstate'
+              backendAzureRmContainerName: 'xyzcontainer'
+              backendAzureRmKey: '${{ parameters.environment }}.tfstate'
+
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}'
+              environmentServiceNameAzureRM: 'newservice'
+         
+  - stage: Apply
+    dependsOn: 
+    - plan
+    displayName: Apply
+    jobs:
+      - job: Approval
+        displayName: Approval
+        pool: server
+        steps:
+          - task: ManualValidation@1
+            inputs:
+              notifyUsers: 'asc@wdc'
+
+      - job: Apply
+        dependsOn: Approval
+        displayName: Apply
+        steps:
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}'
+              backendServiceArm: 'newservice'
+              backendAzureRmStorageAccountName: 'pipelinetfstate'
+              backendAzureRmContainerName: 'xyzcontainer'
+              backendAzureRmKey: '${{ parameters.environment }}.tfstate'
+
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}'
+              environmentServiceNameAzureRM: 'newservice'
+
