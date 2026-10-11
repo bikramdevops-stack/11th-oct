@@ -80,17 +80,17 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/dev'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/prod'
               backendServiceArm: 'newservice'
               backendAzureRmStorageAccountName: 'pipelinetfstate'
               backendAzureRmContainerName: 'xyzcontainer'
-              backendAzureRmKey: 'dev.tfstate'
+              backendAzureRmKey: 'prod.tfstate'
 
           - task: TerraformTask@5
             inputs:
               provider: 'azurerm'
               command: 'validate'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/dev'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/prod'
 
   - stage: plan
     dependsOn:
@@ -104,17 +104,17 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/dev'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/prod'
               backendServiceArm: 'newservice'
               backendAzureRmStorageAccountName: 'pipelinetfstate'
               backendAzureRmContainerName: 'xyzcontainer'
-              backendAzureRmKey: 'dev.tfstate'
+              backendAzureRmKey: 'prod.tfstate'
 
           - task: TerraformTask@5
             inputs:
               provider: 'azurerm'
               command: 'plan'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/dev'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/prod'
               environmentServiceNameAzureRM: 'newservice'
          
   - stage: Apply
@@ -138,16 +138,16 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/dev'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/prod'
               backendServiceArm: 'newservice'
               backendAzureRmStorageAccountName: 'pipelinetfstate'
               backendAzureRmContainerName: 'xyzcontainer'
-              backendAzureRmKey: 'dev.tfstate'
+              backendAzureRmKey: 'prod.tfstate'
 
           - task: TerraformTask@5
             inputs:
               provider: 'azurerm'
               command: 'apply'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/dev'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environment/prod'
               environmentServiceNameAzureRM: 'newservice'
 
